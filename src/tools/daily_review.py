@@ -24,8 +24,11 @@ from tools.weight import get_weight_summary
 
 WEEKDAYS = {"en": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
             "de": ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]}
-WORDS = {"en": {"steps": "steps", "avg_hr": "avg HR", "load": "load", "rest": "no activity"},
-         "de": {"steps": "Schritte", "avg_hr": "Ø HR", "load": "Load", "rest": "keine Aktivität"}}
+WORDS = {"en": {"steps": "steps", "avg_hr": "avg HR", "load": "load", "rest": "no activity",
+                "walking": "walking"},
+         "de": {"steps": "Schritte", "avg_hr": "Ø HR", "load": "Load", "rest": "keine Aktivität",
+                "walking": "Gehen"}}
+WALKING = {"walking", "casual_walking", "speed_walking"}   # summed up in the short lines
 WEIGHT_LOOKBACK_DAYS = 7
 MAX_DETAILS = 25          # activity detail calls per review
 
@@ -106,7 +109,7 @@ def _weight_line(night: date) -> str:
                  if weight.weight_delta_kg is not None else "")
         fat = f", body fat {weight.body_fat_percent}%" if weight.body_fat_percent else ""
         muscle = f", muscle {weight.muscle_mass_kg} kg" if weight.muscle_mass_kg else ""
-        return f"Weight: {weight.weight_kg} kg on {weight.date}{delta}{fat}{muscle}"
+        return f"Weight: {weight.weight_kg:.2f} kg on {weight.date}{delta}{fat}{muscle}"
     return f"Weight: no weigh-in in the last {WEIGHT_LOOKBACK_DAYS} days"
 
 
@@ -192,13 +195,24 @@ def _context_lines(trained: date, days: int, by_day: dict, steps: dict, language
     for offset in range(days, 0, -1):
         day = trained - timedelta(days=offset)
         acts = by_day.get(day, [])
-        text = " + ".join(_activity_text(a, words, full=False) for a in acts) or words["rest"]
+        text = _short(acts, words)
         day_steps = steps.get(day.isoformat())
         lines.append(f"- {_day(day, language)}: {text}"
                      + (f" ({day_steps} {words['steps']})" if day_steps else ""))
     total_load = sum(a.get("load") or 0 for acts in by_day.values() for a in acts)
     lines.append(f"Training load of these {days + 1} days: {total_load:.0f}")
     return lines
+
+
+def _short(acts: list[dict], words: dict) -> str:
+    """A day's activities in one short text; walks are summed up ('walking 2x 80 min')."""
+    walks = [a for a in acts if a["type"] in WALKING and a["ok"]]
+    texts = [_activity_text(a, words, full=False) for a in acts if a not in walks]
+    if walks:
+        minutes = sum(a["minutes"] for a in walks)
+        texts.append(f"{words['walking']} {len(walks)}x {_num(minutes)} min"
+                     if len(walks) > 1 else _activity_text(walks[0], words, full=False))
+    return " + ".join(texts) or words["rest"]
 
 
 @server.tool()
@@ -239,8 +253,7 @@ def get_daily_review(
     if days:
         lines += _context_lines(trained, days, by_day, steps, language)
 
-    status = " + ".join(_activity_text(a, words, full=False) for a in trained_acts) \
-        or words["rest"]
+    status = _short(trained_acts, words)
     if trained_steps:
         status += f" ({trained_steps} {words['steps']})"
     lines += ["", f"## STATUS LINE for {_day(trained, language)} (copy verbatim into the log)",

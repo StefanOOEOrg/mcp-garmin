@@ -29,6 +29,8 @@ ACTIVITIES = [  # newest first, as Garmin lists them
     SimpleNamespace(id=3, timestamp="2026-10-21T18:00:00", type="virtual_ride"),
     SimpleNamespace(id=4, timestamp="2026-10-21T07:30:00", type="strength_training"),
     SimpleNamespace(id=2, timestamp="2026-10-20T17:00:00", type="tennis_v2"),
+    SimpleNamespace(id=5, timestamp="2026-10-20T07:00:00", type="walking"),
+    SimpleNamespace(id=6, timestamp="2026-10-20T12:00:00", type="walking"),
 ]
 DETAILS = {
     2: {"name": "Tennis", "start": "2026-10-20T17:00:00", "duration": 6780.0, "distance": 0.0,
@@ -40,6 +42,14 @@ DETAILS = {
         "elevation_gain": 5.0, "average_hr": 114.0, "max_hr": 140.0, "training_effect": 2.4,
         "anaerobic_training_effect": 0.0, "activity_training_load": 47.6, "calories": 505.0,
         "average_power": 140.0},
+    5: {"name": "Walk", "start": "2026-10-20T07:00:00", "duration": 2400.0, "distance": 3700.0,
+        "elevation_gain": None, "average_hr": 96.0, "max_hr": 110.0, "training_effect": 1.1,
+        "anaerobic_training_effect": 0.0, "activity_training_load": 13.3, "calories": 200.0,
+        "average_power": None},
+    6: {"name": "Walk", "start": "2026-10-20T12:00:00", "duration": 1800.0, "distance": 2000.0,
+        "elevation_gain": None, "average_hr": 90.0, "max_hr": 100.0, "training_effect": 0.5,
+        "anaerobic_training_effect": 0.0, "activity_training_load": 5.0, "calories": 100.0,
+        "average_power": None},
     4: {"name": "Strength legs", "start": "2026-10-21T07:30:00", "duration": 2820.0,
         "distance": 0.0,
         "elevation_gain": None, "average_hr": 85.0, "max_hr": 110.0, "training_effect": 0.7,
@@ -98,9 +108,10 @@ def test_review_has_night_training_context_and_status_line(tools):
     assert training.index("Strength legs") < training.index("Virtual Ride")
     assert "BARBELL_BACK_SQUAT 2 sets: 10x20 kg, 8x45 kg; CRUNCH 1 sets: 12" in text
     assert "18:00 Virtual Ride 60 min/25.8 km, Ø HR 114 (max 140), 140 W, TE 2.4" in text
-    assert "- Di 20.10: Tennis 113 min, Ø HR 134, TE 3.7, Load 306.7 (6922 Schritte)" in text
+    assert ("- Di 20.10: Tennis 113 min, Ø HR 134, TE 3.7, Load 306.7 + Gehen 2x 70 min "
+            "(6922 Schritte)") in text
     assert "- Mo 19.10: keine Aktivität" in text
-    assert "Training load of these 3 days: 363" in text
+    assert "Training load of these 3 days: 381" in text
     assert text.endswith("Mi 21.10: Strength legs 47 min, Ø HR 85, TE 0.7, Load 8.5 + Virtual Ride "
                          "60 min/25.8 km, Ø HR 114, TE 2.4, Load 47.6 (13001 Schritte)")
 
@@ -118,7 +129,7 @@ def test_review_names_missing_night_data(tools):
 
 def test_review_rest_day(tools):
     """No activity on the reviewed day: a rest line and a rest status line."""
-    tools.return_value = ACTIVITIES[2:]
+    tools.return_value = ACTIVITIES[2:3]
     text = get_daily_review(date(2026, 10, 22), days=1)
     assert "- no activity" in text
     assert text.endswith("Wed 21.10: no activity (13001 steps)")
