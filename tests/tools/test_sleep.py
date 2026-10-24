@@ -86,12 +86,15 @@ def test_get_sleep_summary_maps_fields(mock_sleep_data_get, mock_login, fake_sle
 @patch("garmin_client.login")
 @patch("garth.SleepData.get")
 def test_get_sleep_summary_raises_tool_error_when_no_data(mock_sleep_data_get, mock_login):
-    """No data for the date is an anticipated failure: ToolError with a
-    specific, LLM-readable message, not a generic crash."""
+    """No data for the date is an anticipated failure: ToolError that also names
+    the usual cause (night filed under the wake-up day, watch not synced)."""
     mock_sleep_data_get.return_value = None
 
-    with pytest.raises(ToolError, match="No sleep data found"):
+    with pytest.raises(ToolError) as excinfo:
         get_sleep_summary(date(2026, 9, 13))
+    message = str(excinfo.value)
+    assert "No sleep data found for 2026-09-13" in message
+    assert "day the user woke up" in message and "synced" in message
     mock_login.assert_called_once()
 
 

@@ -30,8 +30,10 @@ def test_get_calorie_summary_maps_fields(mock_connectapi, mock_login, fake_summa
     assert result[1].active_kilocalories == 370.0
     assert result[1].resting_kilocalories == 2242.0
     assert result[1].calorie_goal == 2000
-    for r in result:
-        assert r.total_kilocalories == r.active_kilocalories + r.resting_kilocalories
+    for summary in result:
+        assert summary.total_kilocalories == (
+            summary.active_kilocalories + summary.resting_kilocalories
+        )
     called_paths = [c.args[0] for c in mock_connectapi.call_args_list]
     assert called_paths == [
         "/usersummary-service/usersummary/daily/?calendarDate=2026-10-01",
@@ -41,7 +43,7 @@ def test_get_calorie_summary_maps_fields(mock_connectapi, mock_login, fake_summa
 
 @patch("garmin_client.login")
 @patch("garth.connectapi")
-def test_get_calorie_summary_defaults_to_single_day(mock_connectapi, mock_login, fake_summaries):
+def test_get_calorie_summary_defaults_to_single_day(mock_connectapi, _mock_login, fake_summaries):
     """Without a period only the target date is requested."""
     mock_connectapi.return_value = fake_summaries[1]
 
@@ -52,9 +54,12 @@ def test_get_calorie_summary_defaults_to_single_day(mock_connectapi, mock_login,
 
 @patch("garmin_client.login")
 @patch("garth.connectapi")
-def test_get_calorie_summary_skips_days_without_data(mock_connectapi, mock_login):
+def test_get_calorie_summary_skips_days_without_data(mock_connectapi, _mock_login):
     """A day without any synced data (empty response) is left out, not an error."""
-    mock_connectapi.side_effect = [None, {"calendarDate": "2026-10-02", "totalKilocalories": 2612.0}]
+    mock_connectapi.side_effect = [
+        None,
+        {"calendarDate": "2026-10-02", "totalKilocalories": 2612.0},
+    ]
 
     result = get_calorie_summary(date(2026, 10, 2), 2)
 
@@ -63,7 +68,7 @@ def test_get_calorie_summary_skips_days_without_data(mock_connectapi, mock_login
 
 @patch("garmin_client.login")
 @patch("garth.connectapi")
-def test_get_calorie_summary_wraps_garth_errors(mock_connectapi, mock_login):
+def test_get_calorie_summary_wraps_garth_errors(mock_connectapi, _mock_login):
     """A Garth failure surfaces as a ToolError the agent can report."""
     mock_connectapi.side_effect = GarthException("boom")
 
@@ -72,7 +77,7 @@ def test_get_calorie_summary_wraps_garth_errors(mock_connectapi, mock_login):
 
 @patch("garmin_client.login")
 @patch("garth.connectapi")
-def test_get_calorie_summary_projects_open_day_like_the_watch(mock_connectapi, mock_login):
+def test_get_calorie_summary_projects_open_day_like_the_watch(mock_connectapi, _mock_login):
     """Today (recorded < 24 h): resting calories scaled to 24 h + active so far.
     Real reading at 15:20 - the watch showed 2571."""
     mock_connectapi.return_value = {
@@ -88,7 +93,9 @@ def test_get_calorie_summary_projects_open_day_like_the_watch(mock_connectapi, m
 
 @patch("garmin_client.login")
 @patch("garth.connectapi")
-def test_get_calorie_summary_complete_day_projection_equals_total(mock_connectapi, mock_login, fake_summaries):
+def test_get_calorie_summary_complete_day_projection_equals_total(
+    mock_connectapi, _mock_login, fake_summaries
+):
     """For a finished day the projection is simply the total."""
     mock_connectapi.return_value = fake_summaries[1]
 
