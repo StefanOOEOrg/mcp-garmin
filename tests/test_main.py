@@ -31,3 +31,21 @@ def test_start_without_credentials_prints_hint_and_exits_with_1():
     assert result.returncode == 1
     assert "GARMIN_USERNAME" in output and ".env" in output
     assert "Traceback" not in output
+
+
+def test_start_without_credentials_does_not_announce_ready():
+    """A failed start must not read like a successful one: no 'ready' line before the error.
+
+    `mcp_server` logs "MCP server ... ready" when it is imported. With missing
+    credentials that line is printed before the error, so a first-time user reads
+    "ready" and then "cannot start". The credentials check has to happen first.
+    """
+    result = subprocess.run(
+        [sys.executable, "src/main.py"], cwd=REPO_ROOT, env=_env_without_credentials(),
+        capture_output=True, text=True, timeout=30, check=False,
+    )
+
+    output = result.stdout + result.stderr
+    assert result.returncode == 1
+    assert "ready" not in output
+    assert "GARMIN_USERNAME" in output
