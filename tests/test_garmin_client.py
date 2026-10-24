@@ -1,4 +1,7 @@
 """Tests for garmin_client: session resume and the re-login fallback."""
+# _with_session is the unit under test here: calling the module-private helper directly
+# is intentional, so the protected-access warning is switched off for this file only.
+# pylint: disable=protected-access
 from unittest.mock import MagicMock, call, patch
 import pytest
 from garth.exc import GarthException
@@ -6,7 +9,9 @@ from garth.exc import GarthException
 import garmin_client
 
 REJECTED = GarthException(msg="DI-OAuth2 exchange failed: HTTP Error 400: ")
-TIMEOUT = GarthException(msg="DI-OAuth2 exchange failed: Failed to perform, curl: (28) Operation timed out")
+TIMEOUT = GarthException(
+    msg="DI-OAuth2 exchange failed: Failed to perform, curl: (28) Operation timed out"
+)
 
 @patch("garmin_client.login")
 def test_with_session_returns_result_without_relogin(mock_login):
@@ -40,8 +45,10 @@ def test_with_session_retries_only_once(mock_login):
     assert mock_login.call_count == 2
 
 @patch("garmin_client.garth")
-def test_forced_login_skips_resume_and_saves_session(mock_garth):
+def test_forced_login_skips_resume_and_saves_session(mock_garth, monkeypatch):
     """force=True goes straight to the password login and stores the new session."""
+    monkeypatch.setattr(garmin_client.config, "GARMIN_USERNAME", "user@example.com")
+    monkeypatch.setattr(garmin_client.config, "GARMIN_PASSWORD", "secret")
     garmin_client.login(force=True)
     mock_garth.resume.assert_not_called()
     mock_garth.login.assert_called_once()

@@ -19,9 +19,6 @@ GARMIN_PASSWORD = os.getenv("GARMIN_PASSWORD")
 # === GARTH SESSION ===
 GARTH_SESSION_DIR = os.getenv("GARTH_SESSION_DIR", "~/.garth")
 
-if not GARMIN_USERNAME or not GARMIN_PASSWORD:
-    raise ValueError("GARMIN_USERNAME and GARMIN_PASSWORD are required (see .env.template)")
-
 
 def require_credentials() -> None:
     """Raise if the Garmin username or password is missing.
@@ -33,4 +30,16 @@ def require_credentials() -> None:
     Raises:
         ValueError: naming both variables and pointing at .env.template.
     """
-    raise NotImplementedError
+    missing = [
+        name
+        for name, value in (
+            ("GARMIN_USERNAME", GARMIN_USERNAME),
+            ("GARMIN_PASSWORD", GARMIN_PASSWORD),
+        )
+        if not value
+    ]
+    if missing:
+        raise ValueError(
+            f"Missing Garmin credentials: {', '.join(missing)}. Set GARMIN_USERNAME and"
+            " GARMIN_PASSWORD in your .env file (see .env.template)."
+        )

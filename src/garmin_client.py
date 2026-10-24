@@ -20,6 +20,8 @@ def login(force: bool = False) -> None:
         except GarthException as exc:
             log.info("Garth error resuming Garth session: %s", exc)
 
+    # A cached session is enough to work; only the password login needs credentials.
+    config.require_credentials()
     try:
         garth.login(config.GARMIN_USERNAME, config.GARMIN_PASSWORD)
     except GarthException as exc:
@@ -122,7 +124,9 @@ def get_exercise_sets(activity_id: int) -> dict | None:
     garth-ng has no typed model for this endpoint, so the raw JSON dict is returned.
     """
     try:
-        raw = _with_session(lambda: garth.connectapi(f"/activity-service/activity/{activity_id}/exerciseSets"))
+        raw = _with_session(
+            lambda: garth.connectapi(f"/activity-service/activity/{activity_id}/exerciseSets")
+        )
         return raw
     except GarthException as exc:
         log.error("Garth error getting exercise sets for id %d: %s", activity_id, exc)
@@ -139,7 +143,8 @@ def get_daily_summaries(target_date: date, period: int) -> list[dict]:
         def fetch_all() -> list[dict]:
             summaries = []
             for day in days:
-                raw = garth.connectapi(f"/usersummary-service/usersummary/daily/?calendarDate={day.isoformat()}")
+                path = f"/usersummary-service/usersummary/daily/?calendarDate={day.isoformat()}"
+                raw = garth.connectapi(path)
                 if raw:
                     summaries.append(raw)
             return summaries
