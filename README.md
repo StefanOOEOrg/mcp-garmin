@@ -2,7 +2,9 @@
 
 [![CI](https://github.com/StefanOOEOrg/mcp-garmin/actions/workflows/ci.yml/badge.svg)](https://github.com/StefanOOEOrg/mcp-garmin/actions/workflows/ci.yml)
 
-A thin MCP server layer over the [garth-ng](https://pypi.org/project/garth-ng/) library, exposing your own Garmin Connect data to an LLM via the [Model Context Protocol](https://modelcontextprotocol.io).
+A thin MCP server layer over the [garth-ng](https://pypi.org/project/garth-ng/) library, exposing your own
+Garmin Connect data to an LLM via the [Model Context Protocol](https://modelcontextprotocol.io) — plus a small
+local store for body measurements Garmin cannot hold (see [Body Measurements](#body-measurements)).
 
 > **Disclaimer:** This is an unofficial, personal project, not affiliated with or endorsed by Garmin. It uses `garth-ng`, which talks to undocumented, reverse-engineered Garmin Connect endpoints. Use at your own risk, with your own account and credentials.
 
@@ -25,7 +27,9 @@ mcp-garmin/
 │   │   ├── calories.py
 │   │   ├── weight.py
 │   │   ├── training_readiness.py
+│   │   ├── metrics.py         # The five measurement tools over metrics_store.py
 │   │   └── daily_review.py   # Morning check-in in one call: sleep, HRV, readiness, training
+│   ├── metrics_store.py    # Local SQLite store for self-defined measurements (no Garmin access)
 │   ├── garmin_client.py    # Garth login/session handling + data access
 │   ├── main.py              # Entry point (starts the server over stdio)
 │   └── explore_sleep.py     # Standalone script for manually testing the Garth integration
@@ -132,6 +136,46 @@ mcp-garmin:
     GARMIN_PASSWORD: ${GARMIN_PASSWORD}
     GARTH_SESSION_DIR: ${GARTH_SESSION_DIR}   # e.g. ~/.garth
 ```
+
+## Body Measurements
+
+Garmin Connect accepts a fixed body-composition schema (weight and friends), so everything else — waist,
+hip, a pulse taken by hand — has no place there. Those values live in a **local SQLite store** instead, next
+to the Garmin data in your training log:
+
+- `create_measurement_category(name, unit)` — define a category once, e.g. `waist` / `cm`.
+- `list_measurement_categories()` — what already exists, with the number of values and the newest timestamp.
+- `add_measurement(category, value, unit=None, measured_at=None)` — record a value. The unit falls back to
+  the category default; a different unit is stored **as given**. `measured_at` is local ISO 8601
+  (`2026-10-18T06:35:00`), a bare date means midnight, omitted means now. An unknown category is created on
+  the fly when you pass a unit.
+- `get_measurements(category, start=None, end=None)` — the series, ascending.
+- `get_measurement_summary(category, start=None, end=None)` — per unit: count, first, last, delta, min, max
+  and the ISO-week averages (`2026-W42`, Monday to Sunday).
+
+A typical exchange:
+
+> **You:** My waist was 95 cm on 12 October and 96 cm on 14 October.
+> **Assistant:** *(calls `add_measurement("waist", 95, "cm", "2026-10-12T07:00:00")`, then the same for the
+> 14th)*
+> **You:** How has my waist developed?
+> **Assistant:** *(calls `get_measurement_summary("waist")`)* — one week so far, `2026-W42`, average 95.5 cm
+> from two measurements.
+
+Rules worth knowing:
+
+- **Units are never converted.** `cm` and `in` stay separate blocks — you get back exactly the numbers you
+  entered.
+- **Weeks are ISO weeks** (Monday–Sunday), labelled by the ISO week-year: 2025-12-29 belongs to `2026-W01`.
+- **Nothing leaves the machine.** These five tools never call Garmin Connect; they need no credentials and no
+  network.
+- **The file** is `GARMIN_METRICS_DB`, default `~/.garmin-metrics.db`, created on first use (parent directory
+  included).
+- Errors name the offending value: an unparsable timestamp, `NaN`/`inf`, an empty category, a duplicate
+  category with the unit that already exists, or an unusable database path.
+
+`get_weight_summary` stays the source for everything the scale measures — the store is for what Garmin cannot
+hold.
 
 ## Available Tools
 
