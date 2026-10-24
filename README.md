@@ -11,7 +11,7 @@ A thin MCP server layer over the [garth-ng](https://pypi.org/project/garth-ng/) 
 ```
 mcp-garmin/
 ├── src/
-│   ├── config.py            # Central config: env vars, validated on import
+│   ├── config.py            # Central config: env vars, credentials checked on demand
 │   ├── server_instance.py  # Creates the shared MCPServer instance
 │   ├── mcp_server.py       # Composition root: wires up the server + tools
 │   ├── tools/               # One module per MCP tool
@@ -52,7 +52,7 @@ mcp-garmin/
 ├── .pylintrc
 ├── pytest.ini
 ├── requirements.txt
-├── requirements-dev.txt     # Adds pytest/pytest-cov on top of requirements.txt
+├── requirements-dev.txt     # Adds pytest/pytest-cov/pylint on top of requirements.txt
 ├── LICENSE
 └── README.md
 ```
@@ -125,8 +125,8 @@ Hermes registration (`mcp_servers` in the profile's `config.yaml`):
 
 ```yaml
 mcp-garmin:
-  command: venv/bin/python
-  args: [src/main.py]
+  command: /path/to/mcp-garmin/venv/bin/python
+  args: [/path/to/mcp-garmin/src/main.py]
   env:
     GARMIN_USERNAME: ${GARMIN_USERNAME}
     GARMIN_PASSWORD: ${GARMIN_PASSWORD}
