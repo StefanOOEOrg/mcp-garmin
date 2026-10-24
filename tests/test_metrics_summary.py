@@ -91,6 +91,17 @@ def test_a_week_reports_its_monday_and_sunday(store):
     assert week.end == "2026-10-18"  # Sunday
 
 
+def test_a_december_day_can_belong_to_the_next_iso_year(store):
+    """2025-12-29 is the Monday of 2026-W01: the ISO year wins over the calendar year."""
+    fill(store, [(95.0, "cm", "2025-12-29T07:00:00"), (96.0, "cm", "2026-01-05T07:00:00")])
+
+    (summary,) = store.summarize("waist")
+
+    assert [week.week for week in summary.weeks] == ["2026-W01", "2026-W02"]
+    assert summary.weeks[0].start == "2025-12-29"
+    assert summary.weeks[0].end == "2026-01-04"
+
+
 def test_a_sunday_belongs_to_the_week_that_started_on_monday(store):
     """Sunday is the last day of its ISO week."""
     fill(store, [(95.0, "cm", "2026-10-18T20:00:00"), (97.0, "cm", "2026-10-19T06:00:00")])
