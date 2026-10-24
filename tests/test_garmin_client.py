@@ -53,3 +53,29 @@ def test_login_resumes_cached_session(mock_garth):
     garmin_client.login()
     mock_garth.resume.assert_called_once()
     mock_garth.login.assert_not_called()
+
+
+@patch("garmin_client.garth")
+def test_login_resumes_cached_session_without_credentials(mock_garth, monkeypatch):
+    """A cached session is enough to work: resume must not demand a password."""
+    monkeypatch.setattr(garmin_client.config, "GARMIN_USERNAME", None)
+    monkeypatch.setattr(garmin_client.config, "GARMIN_PASSWORD", None)
+
+    garmin_client.login()
+
+    mock_garth.resume.assert_called_once()
+    mock_garth.login.assert_not_called()
+
+
+@patch("garmin_client.garth")
+def test_login_without_credentials_reports_the_missing_variables(mock_garth, monkeypatch):
+    """No session and no credentials: a ValueError naming the variables, before any
+    network login is attempted."""
+    monkeypatch.setattr(garmin_client.config, "GARMIN_USERNAME", None)
+    monkeypatch.setattr(garmin_client.config, "GARMIN_PASSWORD", None)
+    mock_garth.resume.side_effect = GarthException(msg="No token files found in ~/.garth")
+
+    with pytest.raises(ValueError, match="GARMIN_USERNAME"):
+        garmin_client.login()
+
+    mock_garth.login.assert_not_called()

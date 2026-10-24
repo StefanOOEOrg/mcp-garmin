@@ -21,3 +21,16 @@ GARTH_SESSION_DIR = os.getenv("GARTH_SESSION_DIR", "~/.garth")
 
 if not GARMIN_USERNAME or not GARMIN_PASSWORD:
     raise ValueError("GARMIN_USERNAME and GARMIN_PASSWORD are required (see .env.template)")
+
+
+def require_credentials() -> None:
+    """Raise if the Garmin username or password is missing.
+
+    Called only where a password login would actually happen (and once at server
+    start), never at import time: a fresh clone without .env must stay importable
+    and testable.
+
+    Raises:
+        ValueError: naming both variables and pointing at .env.template.
+    """
+    raise NotImplementedError

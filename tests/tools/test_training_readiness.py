@@ -83,12 +83,15 @@ def test_get_training_readiness_summary_maps_fields(
 def test_get_training_readiness_summary_raises_tool_error_when_no_data(
     mock_readiness_get, mock_login
 ):
-    """No data for the date is an anticipated failure: ToolError with a
-    specific, LLM-readable message, not a generic crash."""
+    """No data for the date is an anticipated failure: ToolError that also names
+    the usual cause (night filed under the wake-up day, watch not synced)."""
     mock_readiness_get.return_value = None
 
-    with pytest.raises(ToolError, match="No training readiness data found"):
+    with pytest.raises(ToolError) as excinfo:
         get_training_readiness_summary(date(2026, 9, 17))
+    message = str(excinfo.value)
+    assert "No training readiness data found for 2026-09-17" in message
+    assert "day the user woke up" in message and "synced" in message
     mock_login.assert_called_once()
 
 
