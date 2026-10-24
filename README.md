@@ -147,6 +147,12 @@ mcp-garmin:
 | `get_steps_summary(target_date, period)` | Daily step counts, distance, and step goal for each day in the `period` days up to `target_date` |
 | `get_weight_summary(target_date)` | Weigh-in data for a date: weight, BMI, body composition (fat/water/bone/muscle), if measured |
 | `get_training_readiness_summary(target_date)` | Garmin's most recent training readiness score and its contributing factors (sleep, HRV, recovery time, acute load, stress) for a date |
+| `create_measurement_category(name, unit)` | Create a category for a self-defined measurement with its default unit (e.g. `waist`/`cm`); a duplicate fails and names the unit that already exists |
+| `list_measurement_categories()` | Every category with its unit, the number of measurements and the timestamp of the newest one — look here first when the categories are unknown |
+| `add_measurement(category, value, unit=None, measured_at=None)` | Store one value; the unit falls back to the category default, `measured_at` is local ISO 8601 (`2026-10-18T06:35:00`, a bare date means midnight, omitted means now); an unknown category needs a unit |
+| `get_measurements(category, start=None, end=None)` | All values of a category in the range, ascending by timestamp; bounds are inclusive and a bare end date covers its whole day |
+| `get_measurement_summary(category, start=None, end=None)` | Per unit found in the range: count, first, last, delta, min, max and the ISO-week averages with their Monday/Sunday and label (`2026-W42`) |
+
 | `get_daily_review(target_date, days=6, language="en")` | Morning check-in in ONE call: last night's sleep, HRV (vs. weekly average), training readiness with all factors, the latest weigh-in, the previous day's training with details and strength sets, steps, and the days before as context — pre-formatted text plus a ready-made status line for a training log. `days` is the training context before the reviewed day (0-13), `language` (`en` or `de`) sets weekday names and the status line |
 
 All dates are ISO 8601 (`YYYY-MM-DD`).
@@ -157,6 +163,10 @@ All dates are ISO 8601 (`YYYY-MM-DD`).
 - It uses the unofficial Garmin Connect endpoints via `garth-ng`, which can break at any time (see the disclaimer above).
 - Credentials are stored in plain text in `.env`; the `.garth` session directory and `.env` must not be committed.
 - It handles personal health data. Keep the repository, logs and issue reports free of that data.
+- The five measurement tools are the exception to "Garmin only": they never call Garmin Connect.
+  They keep self-defined values (waist, hip, …) in a local SQLite file (`GARMIN_METRICS_DB`,
+  default `~/.garmin-metrics.db`), because Garmin's only write endpoint accepts a fixed
+  body-composition schema. Values of different units are stored as given and never converted.
 
 ## License
 
