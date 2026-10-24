@@ -19,6 +19,9 @@ GARMIN_PASSWORD = os.getenv("GARMIN_PASSWORD")
 # === GARTH SESSION ===
 GARTH_SESSION_DIR = os.getenv("GARTH_SESSION_DIR", "~/.garth")
 
+# === METRICS STORE ===
+GARMIN_METRICS_DB = os.getenv("GARMIN_METRICS_DB", "~/.garmin-metrics.db")
+
 
 def require_credentials() -> None:
     """Raise if the Garmin username or password is missing.
