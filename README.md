@@ -1,5 +1,7 @@
 # MCP Server for garth-ng
 
+[![CI](https://github.com/StefanOOEOrg/mcp-garmin/actions/workflows/ci.yml/badge.svg)](https://github.com/StefanOOEOrg/mcp-garmin/actions/workflows/ci.yml)
+
 A thin MCP server layer over the [garth-ng](https://pypi.org/project/garth-ng/) library, exposing your own Garmin Connect data to an LLM via the [Model Context Protocol](https://modelcontextprotocol.io).
 
 > **Disclaimer:** This is an unofficial, personal project, not affiliated with or endorsed by Garmin. It uses `garth-ng`, which talks to undocumented, reverse-engineered Garmin Connect endpoints. Use at your own risk, with your own account and credentials.
@@ -22,11 +24,15 @@ mcp-garmin/
 │   │   ├── steps.py
 │   │   ├── calories.py
 │   │   ├── weight.py
-│   │   └── training_readiness.py
+│   │   ├── training_readiness.py
+│   │   └── daily_review.py   # Morning check-in in one call: sleep, HRV, readiness, training
 │   ├── garmin_client.py    # Garth login/session handling + data access
 │   ├── main.py              # Entry point (starts the server over stdio)
 │   └── explore_sleep.py     # Standalone script for manually testing the Garth integration
 ├── tests/                    # Mirrors src/, mocks the garth boundary
+│   ├── test_garmin_client.py
+│   ├── test_config.py
+│   ├── test_main.py
 │   └── tools/
 │       ├── test_ping.py
 │       ├── test_sleep.py
@@ -36,7 +42,12 @@ mcp-garmin/
 │       ├── test_steps.py
 │       ├── test_calories.py
 │       ├── test_weight.py
-│       └── test_training_readiness.py
+│       ├── test_training_readiness.py
+│       ├── test_shared.py
+│       └── test_daily_review.py
+├── .github/
+│   └── workflows/
+│       └── ci.yml            # CI: pytest + pylint on 3.11 and 3.14
 ├── .env.template            # Template for credentials and settings
 ├── .pylintrc
 ├── pytest.ini
@@ -47,6 +58,8 @@ mcp-garmin/
 ```
 
 ## Installation
+
+**Python 3.11 or newer** is required (tested with 3.11 and 3.14; the CI checks both).
 
 ```bash
 # Create and activate a virtual environment
@@ -99,20 +112,21 @@ Opens a browser tab with the Inspector UI, where the available tools can be call
 pip install -r requirements-dev.txt
 pytest -v
 pytest --cov=src --cov-report=term-missing  # with coverage
+pylint src tests                            # lint gate, must be clean
 ```
 
-Tests mock the `garth` boundary (no real network calls or credentials needed) and live under `tests/`, mirroring the `src/` structure.
+`requirements-dev.txt` adds pytest, pytest-cov and pylint on top of `requirements.txt`. Tests mock the `garth` boundary (no real network calls or credentials needed) and live under `tests/`, mirroring the `src/` structure.
 
 ## Deployment (Hermes)
 
-Install it with its own venv (see Development above).
+Install it with its own venv (see Installation above).
 
 Hermes registration (`mcp_servers` in the profile's `config.yaml`):
 
 ```yaml
 mcp-garmin:
-  command: /path/to/mcp-garmin/.venv/bin/python
-  args: [/path/to/mcp-garmin/src/main.py]
+  command: venv/bin/python
+  args: [src/main.py]
   env:
     GARMIN_USERNAME: ${GARMIN_USERNAME}
     GARMIN_PASSWORD: ${GARMIN_PASSWORD}
@@ -133,8 +147,16 @@ mcp-garmin:
 | `get_steps_summary(target_date, period)` | Daily step counts, distance, and step goal for each day in the `period` days up to `target_date` |
 | `get_weight_summary(target_date)` | Weigh-in data for a date: weight, BMI, body composition (fat/water/bone/muscle), if measured |
 | `get_training_readiness_summary(target_date)` | Garmin's most recent training readiness score and its contributing factors (sleep, HRV, recovery time, acute load, stress) for a date |
+| `get_daily_review(target_date, days=6, language="en")` | Morning check-in in ONE call: last night's sleep, HRV (vs. weekly average), training readiness with all factors, the latest weigh-in, the previous day's training with details and strength sets, steps, and the days before as context — pre-formatted text plus a ready-made status line for a training log. `days` is the training context before the reviewed day (0-13), `language` (`en` or `de`) sets weekday names and the status line |
 
 All dates are ISO 8601 (`YYYY-MM-DD`).
+
+## Scope / Limitations
+
+- A single-user tool, not a service: it runs locally over stdio — no network port, no authentication.
+- It uses the unofficial Garmin Connect endpoints via `garth-ng`, which can break at any time (see the disclaimer above).
+- Credentials are stored in plain text in `.env`; the `.garth` session directory and `.env` must not be committed.
+- It handles personal health data. Keep the repository, logs and issue reports free of that data.
 
 ## License
 
