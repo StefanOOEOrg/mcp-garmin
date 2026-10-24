@@ -71,6 +71,35 @@ class Measurement:
     measured_at: str  # ISO 8601 without seconds fraction, local time
 
 
+@dataclass(frozen=True)
+class WeekAverage:
+    """One ISO week of a series (Monday to Sunday)."""
+
+    week: str     # ISO label, e.g. "2026-W42" - the ISO week-year decides, not the calendar year
+    start: str    # Monday of that week, "2026-10-12"
+    end: str      # Sunday of that week, "2026-10-18"
+    average: float  # mean of the values in the week, rounded to 2 decimals
+    count: int
+
+
+@dataclass(frozen=True)
+class UnitSummary:
+    """Everything summarize() reports for one unit."""
+
+    # one field per figure the caller asked for; splitting the dataclass would
+    # only move the numbers around
+    # pylint: disable=too-many-instance-attributes
+
+    unit: str
+    count: int
+    first: float   # value of the oldest measurement in the range
+    last: float    # value of the newest one
+    delta: float   # last - first, rounded to 2 decimals
+    min: float
+    max: float
+    weeks: list[WeekAverage]  # ascending by week
+
+
 def _clean_category(name: str, unit: str) -> tuple[str, str, str]:
     """Strip a category name and unit, returning (key, display name, default unit)."""
     display_name = name.strip()
@@ -112,6 +141,24 @@ def _parse_timestamp(raw: str) -> str:
         raise MetricsError(
             f"measured_at must be local time without offset, got {raw!r}")
     return parsed.isoformat(timespec="seconds")
+
+
+def weekly_averages(records: list[Measurement]) -> list[WeekAverage]:
+    """Group measurements into ISO weeks and average them.
+
+    Args:
+        records: measurements of **one** unit, in any order.
+
+    Returns:
+        One ``WeekAverage`` per ISO week, ascending by week. ``start``/``end``
+        are that week's Monday and Sunday as ``YYYY-MM-DD``; ``week`` is the ISO
+        label ``"<iso year>-W<week>"`` (``"%G-W%V"``) — 2026-12-28 therefore
+        belongs to ``2026-W53`` and 2027-01-04 to ``2027-W01``. ``average`` is
+        the mean of the week's values rounded to 2 decimals, ``count`` their
+        number.
+        An empty list gives an empty list.
+    """
+    raise NotImplementedError
 
 
 class Store:
@@ -246,3 +293,28 @@ class Store:
         query += " ORDER BY m.measured_at, m.id"
         rows = self._connection().execute(query, params).fetchall()
         return [Measurement(*row) for row in rows]
+
+
+    def summarize(self, category: str, start: str | None = None,
+                  end: str | None = None) -> list[UnitSummary]:
+        """All figures for one category in a range, grouped by unit.
+
+        Args:
+            category: display name of the category (case-insensitive).
+            start: lower bound, ISO 8601 like ``"2026-10-01"``; ``None`` = no lower bound.
+            end: upper bound; a bare date covers its whole day; ``None`` = no upper bound.
+
+        Returns:
+            One ``UnitSummary`` per unit that appears in the range, ascending by
+            unit. Values in different units are **never** converted or mixed.
+            Within a unit, ``first``/``last`` follow the timestamp (not the
+            insertion order), ``delta`` is ``last - first``, ``min``/``max`` are
+            the smallest and largest value, and ``weeks`` comes from
+            :func:`weekly_averages`.
+            An unknown category or an empty range is an empty list, not an error.
+
+        Raises:
+            MetricsError: a bound is unparsable or carries a UTC offset (same
+                rule as :meth:`get_measurements`).
+        """
+        raise NotImplementedError
