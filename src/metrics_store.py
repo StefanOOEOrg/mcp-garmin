@@ -12,7 +12,7 @@ from __future__ import annotations
 import math
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 SCHEMA = """
@@ -143,6 +143,17 @@ def _parse_timestamp(raw: str) -> str:
     return parsed.isoformat(timespec="seconds")
 
 
+def _week_average(iso_year: int, iso_week: int, values: list[float]) -> WeekAverage:
+    """The average of one ISO week, with its Monday and Sunday."""
+    monday = date.fromisocalendar(iso_year, iso_week, 1)
+    return WeekAverage(
+        week=f"{iso_year}-W{iso_week:02d}",
+        start=monday.isoformat(),
+        end=(monday + timedelta(days=6)).isoformat(),
+        average=round(sum(values) / len(values), 2),
+        count=len(values))
+
+
 def weekly_averages(records: list[Measurement]) -> list[WeekAverage]:
     """Group measurements into ISO weeks and average them.
 
@@ -158,7 +169,14 @@ def weekly_averages(records: list[Measurement]) -> list[WeekAverage]:
         number.
         An empty list gives an empty list.
     """
-    raise NotImplementedError
+    grouped: dict[tuple[int, int], list[float]] = {}
+    for record in records:
+        iso_year, iso_week, _ = datetime.fromisoformat(record.measured_at).date().isocalendar()
+        grouped.setdefault((iso_year, iso_week), []).append(record.value)
+    return [
+        _week_average(iso_year, iso_week, values)
+        for (iso_year, iso_week), values in sorted(grouped.items())
+    ]
 
 
 class Store:
@@ -317,4 +335,22 @@ class Store:
             MetricsError: a bound is unparsable or carries a UTC offset (same
                 rule as :meth:`get_measurements`).
         """
-        raise NotImplementedError
+        records = self.get_measurements(category, start=start, end=end)
+        grouped: dict[str, list[Measurement]] = {}
+        for record in records:
+            grouped.setdefault(record.unit, []).append(record)
+        summaries: list[UnitSummary] = []
+        for unit in sorted(grouped):
+            group = grouped[unit]  # ascending by measured_at, as delivered above
+            values = [record.value for record in group]
+            first, last = values[0], values[-1]
+            summaries.append(UnitSummary(
+                unit=unit,
+                count=len(values),
+                first=first,
+                last=last,
+                delta=round(last - first, 2),
+                min=min(values),
+                max=max(values),
+                weeks=weekly_averages(group)))
+        return summaries
