@@ -2,7 +2,6 @@
 import sys
 
 import config
-from mcp_server import server
 
 if __name__ == "__main__":
     # Check before the server starts reading stdio: a missing .env must end in a
@@ -12,5 +11,9 @@ if __name__ == "__main__":
     except ValueError as exc:
         print(f"Cannot start the Garmin MCP server: {exc}", file=sys.stderr)
         sys.exit(1)
+
+    # Import after the check: importing mcp_server logs "MCP server ... ready", so
+    # importing it first would print "ready" ahead of the error on a failed start.
+    from mcp_server import server  # pylint: disable=import-outside-toplevel
 
     server.run()
