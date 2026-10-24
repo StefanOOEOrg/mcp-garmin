@@ -57,6 +57,26 @@ def test_require_credentials_raises_with_both_variable_names(monkeypatch):
     assert ".env.template" in message
 
 
+@pytest.mark.parametrize(
+    ("username", "password", "missing"),
+    [
+        (None, "secret", "GARMIN_USERNAME"),
+        ("user@example.com", None, "GARMIN_PASSWORD"),
+    ],
+)
+def test_require_credentials_names_the_single_missing_variable(
+    monkeypatch, username, password, missing
+):
+    """One missing half is enough to refuse: a password login cannot work without both."""
+    monkeypatch.setattr(config, "GARMIN_USERNAME", username)
+    monkeypatch.setattr(config, "GARMIN_PASSWORD", password)
+
+    with pytest.raises(ValueError) as excinfo:
+        config.require_credentials()
+
+    assert missing in str(excinfo.value)
+
+
 def test_require_credentials_passes_when_both_are_set(monkeypatch):
     """With credentials present the check returns quietly."""
     monkeypatch.setattr(config, "GARMIN_USERNAME", "user@example.com")
