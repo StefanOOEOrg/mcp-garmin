@@ -1,6 +1,7 @@
 # MCP Server for garth-ng
 
 [![CI](https://github.com/StefanOOEOrg/mcp-garmin/actions/workflows/ci.yml/badge.svg)](https://github.com/StefanOOEOrg/mcp-garmin/actions/workflows/ci.yml)
+[![M8ven Score](https://m8ven.ai/badge/mcp/stefanooeorg-mcp-garmin-1khdvn?v=84df8e19fa5d2b3752324b6521e83814)](https://m8ven.ai/mcp/stefanooeorg-mcp-garmin-1khdvn?s=readme)
 
 A thin MCP server layer over the [garth-ng](https://pypi.org/project/garth-ng/) library, exposing your own
 Garmin Connect data to an LLM via the [Model Context Protocol](https://modelcontextprotocol.io) — plus a small
