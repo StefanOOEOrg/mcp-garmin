@@ -33,3 +33,14 @@ jobs:
         run: python -m pytest -q
       - name: Lint
         run: python -m pylint src tests
+  # Aggregat-Gate: ein Pflicht-Check für alle Jobs des Workflows.
+  # Eigener Job statt Matrix-Check, weil der Ruleset-Name stabil bleiben muss.
+  ci-ok:
+    needs: [test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail unless all jobs succeeded
+        run: |
+          echo "test: ${{ needs.test.result }} "
+          [ "${{ needs.test.result }}" = "success" ]
