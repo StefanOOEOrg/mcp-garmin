@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  ci-ok-test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -36,11 +36,11 @@ jobs:
   # Aggregat-Gate: ein Pflicht-Check für alle Jobs des Workflows.
   # Eigener Job statt Matrix-Check, weil der Ruleset-Name stabil bleiben muss.
   ci-ok:
-    needs: [test]
+    needs: [ci-ok-test]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Fail unless all jobs succeeded
         run: |
-          echo "test: ${{ needs.test.result }} "
-          [ "${{ needs.test.result }}" = "success" ]
+          echo "test: ${{ needs.ci-ok-test.result }} "
+          [ "${{ needs.ci-ok-test.result }}" = "success" ]
