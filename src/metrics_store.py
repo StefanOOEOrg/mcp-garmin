@@ -88,7 +88,6 @@ class UnitSummary:
 
     # one field per figure the caller asked for; splitting the dataclass would
     # only move the numbers around
-    # pylint: disable=too-many-instance-attributes
 
     unit: str
     count: int

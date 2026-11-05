@@ -3,12 +3,15 @@ Activity/ActivityDetail."""
 import dataclasses
 from datetime import date, datetime
 from unittest.mock import patch
+
 import pytest
-from garth.data.activity import Activity as GarthActivity, ActivityType, EventType, Summary
+from garth.data.activity import Activity as GarthActivity
+from garth.data.activity import ActivityType, EventType, Summary
 from garth.data.fitness_stats import FitnessActivity
 from mcp.server.mcpserver.exceptions import ToolError
 
 from tools.activity import get_activity_detail, get_activity_list
+
 
 @pytest.fixture(name="fake_fitness_activities")
 def _build_fake_fitness_activities() -> list[FitnessActivity]:

@@ -1,8 +1,8 @@
 """Tests for garmin_client: session resume and the re-login fallback."""
-# _with_session is the unit under test here: calling the module-private helper directly
-# is intentional, so the protected-access warning is switched off for this file only.
-# pylint: disable=protected-access
+# _with_session is the unit under test here: calling the module-private helper
+# directly is intentional.
 from unittest.mock import MagicMock, call, patch
+
 import pytest
 from garth.exc import GarthException
 

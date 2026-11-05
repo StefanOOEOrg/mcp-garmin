@@ -1,5 +1,6 @@
 """This module provides functionality to explore sleep data using the Garth API."""
 from datetime import date
+
 from garmin_client import get_sleep_data
 
 if __name__ == "__main__":

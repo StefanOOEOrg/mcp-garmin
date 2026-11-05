@@ -1,8 +1,10 @@
 """This module provides a client for interacting with the Garmin API using the Garth library."""
 import logging
 from datetime import date, timedelta
+
 import garth
 from garth.exc import GarthException
+
 import config
 
 log = logging.getLogger(__name__)

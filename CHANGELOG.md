@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- **Linting (#15):** one linter for the repository, as the organization guideline requires. The lint gate
+  and the CI lint step now run `ruff check` with the guideline rule set (`line-length = 100`,
+  `E`, `F`, `I`, `UP`, `B`) from `pyproject.toml`; the second linter, its dependency and its
+  configuration file are gone. Formatting is unchanged in this step.
+
 ## 0.2.0 — 2026-10-24
 
 - **Body measurements (#9):** five new tools store self-defined metrics that Garmin Connect
@@ -12,5 +19,5 @@
 ## 0.1.0 — 2026-10-24
 
 First tagged release: the read-only Garmin Connect tools (`ping`, sleep, HRV, activities, strength
-sets, calories, steps, weight, training readiness, daily review), a CI pipeline with pytest and
-pylint on Python 3.11 and 3.14, and a public-facing README.
+sets, calories, steps, weight, training readiness, daily review), a CI pipeline with pytest and a
+lint gate on Python 3.11 and 3.14, and a public-facing README.

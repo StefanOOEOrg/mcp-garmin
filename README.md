@@ -52,12 +52,12 @@ mcp-garmin/
 │       └── test_daily_review.py
 ├── .github/
 │   └── workflows/
-│       └── ci.yml            # CI: pytest + pylint on 3.11 and 3.14
+│       └── ci.yml            # CI: pytest + ruff on 3.11 and 3.14
 ├── .env.template            # Template for credentials and settings
-├── .pylintrc
+├── pyproject.toml           # ruff configuration: line length and rule set
 ├── pytest.ini
 ├── requirements.txt
-├── requirements-dev.txt     # Adds pytest/pytest-cov/pylint on top of requirements.txt
+├── requirements-dev.txt     # Adds pytest/pytest-cov/ruff on top of requirements.txt
 ├── LICENSE
 └── README.md
 ```
@@ -117,10 +117,12 @@ Opens a browser tab with the Inspector UI, where the available tools can be call
 pip install -r requirements-dev.txt
 pytest -v
 pytest --cov=src --cov-report=term-missing  # with coverage
-pylint src tests                            # lint gate, must be clean
+ruff check src tests                        # lint gate, must be clean
 ```
 
-`requirements-dev.txt` adds pytest, pytest-cov and pylint on top of `requirements.txt`. Tests mock the `garth` boundary (no real network calls or credentials needed) and live under `tests/`, mirroring the `src/` structure.
+`requirements-dev.txt` adds pytest, pytest-cov and ruff on top of `requirements.txt`. The ruff rule set (line
+length 100, `E`, `F`, `I`, `UP`, `B`) lives in `pyproject.toml`, so the same command gives the same result in
+the editor and in CI. Tests mock the `garth` boundary (no real network calls or credentials needed) and live under `tests/`, mirroring the `src/` structure.
 
 ## Deployment (Hermes)
 

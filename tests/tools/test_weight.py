@@ -2,8 +2,9 @@
 import dataclasses
 from datetime import date
 from unittest.mock import patch
-import pytest
+
 import garth
+import pytest
 from mcp.server.mcpserver.exceptions import ToolError
 
 from tools.weight import get_weight_summary
