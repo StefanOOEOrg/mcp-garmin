@@ -3,8 +3,9 @@ to TrainingReadinessSummary."""
 import dataclasses
 from datetime import date, datetime
 from unittest.mock import patch
-import pytest
+
 import garth
+import pytest
 from mcp.server.mcpserver.exceptions import ToolError
 
 from tools.training_readiness import get_training_readiness_summary

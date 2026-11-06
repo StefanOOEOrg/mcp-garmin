@@ -1,5 +1,5 @@
 """Shared functions and utilities for Garmin tools."""
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from functools import singledispatch
 
 # Garmin files a night (sleep, overnight HRV, morning readiness) under the day the user woke up.
@@ -28,7 +28,7 @@ def local_iso(timestamp) -> str:
 @local_iso.register
 def _(timestamp: int) -> str:
     """Convert *_timestamp_local epoch-ms field to an ISO-8601 string."""
-    local_dt = datetime.fromtimestamp(timestamp / 1000, tz=timezone.utc)
+    local_dt = datetime.fromtimestamp(timestamp / 1000, tz=UTC)
     return local_dt.replace(tzinfo=None).isoformat()
 
 @local_iso.register

@@ -5,8 +5,5 @@
     ],
     "python.autoComplete.extraPaths": [
         "${workspaceFolder}/src"
-    ],
-    "python.linting.pylintArgs": [
-        "--init-hook=import sys; sys.path.append('${workspaceFolder}/src')"
     ]
 }

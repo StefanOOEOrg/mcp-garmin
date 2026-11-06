@@ -23,7 +23,6 @@ def _metrics(monkeypatch, tmp_path):
     """A freshly loaded tools.metrics module on its own database in tmp_path."""
     monkeypatch.setattr(config, "GARMIN_METRICS_DB", str(tmp_path / "metrics.db"))
     # A reload after the patch is what gives each test its own module and database.
-    # pylint: disable=import-outside-toplevel,consider-using-from-import
     import tools.metrics as metrics
     return importlib.reload(metrics)
 

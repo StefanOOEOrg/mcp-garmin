@@ -1,12 +1,14 @@
 """Activity summary tool backed by garmin_client/garth."""
-import logging
-import json
 import dataclasses
+import json
+import logging
 from datetime import date
 from typing import Annotated
-from pydantic import BaseModel, Field
-from mcp.server.mcpserver.exceptions import ToolError
+
 from garth.exc import GarthException
+from mcp.server.mcpserver.exceptions import ToolError
+from pydantic import BaseModel, Field
+
 import garmin_client
 from server_instance import server
 from tools._shared import local_iso

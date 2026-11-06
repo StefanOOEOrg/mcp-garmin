@@ -3,8 +3,9 @@ import dataclasses
 from datetime import date
 from types import SimpleNamespace
 from unittest.mock import patch
+
 import pytest
-from garth.data.sleep import DailySleepDTO, SleepScores, Score, SleepData
+from garth.data.sleep import DailySleepDTO, Score, SleepData, SleepScores
 from mcp.server.mcpserver.exceptions import ToolError
 
 from tools.sleep import get_sleep_summary

@@ -14,6 +14,6 @@ if __name__ == "__main__":
 
     # Import after the check: importing mcp_server logs "MCP server ... ready", so
     # importing it first would print "ready" ahead of the error on a failed start.
-    from mcp_server import server  # pylint: disable=import-outside-toplevel
+    from mcp_server import server
 
     server.run()

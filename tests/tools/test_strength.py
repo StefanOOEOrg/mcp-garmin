@@ -3,11 +3,13 @@ to StrengthWorkout/ExerciseSet."""
 from datetime import datetime
 from types import SimpleNamespace
 from unittest.mock import patch
+
 import pytest
 from garth.exc import GarthException
 from mcp.server.mcpserver.exceptions import ToolError
 
 from tools.strength import get_strength_exercises
+
 
 @pytest.fixture(name="fake_exercise_sets")
 def _build_fake_exercise_sets() -> dict:

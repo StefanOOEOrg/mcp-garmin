@@ -1,10 +1,13 @@
 """Tests for tools.calories: mapping of the raw daily summary to CalorieSummary."""
 from datetime import date
 from unittest.mock import patch
+
 import pytest
 from garth.exc import GarthException
 from mcp.server.mcpserver.exceptions import ToolError
+
 from tools.calories import get_calorie_summary
+
 
 @pytest.fixture(name="fake_summaries")
 def _build_fake_summaries() -> list[dict]:

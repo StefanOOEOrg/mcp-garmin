@@ -2,9 +2,12 @@
 import dataclasses
 from datetime import date
 from unittest.mock import patch
-import pytest
+
 import garth
+import pytest
+
 from tools.steps import get_steps_summary
+
 
 @pytest.fixture(name="fake_daily_steps")
 def _build_fake_daily_steps() -> list[garth.DailySteps]:
